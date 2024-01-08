@@ -11,6 +11,9 @@
 #include <asm-generic/gpio.h>
 #endif
 
+#if defined(CONFIG_TARGET_MYNA2)
+#define CONFIG_DW_ALTDESCRIPTOR 1
+#endif
 #define CONFIG_TX_DESCR_NUM	16
 #define CONFIG_RX_DESCR_NUM	16
 #define CONFIG_ETH_BUFSIZE	2048
