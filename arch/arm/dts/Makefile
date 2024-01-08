@@ -802,6 +802,8 @@ dtb-$(CONFIG_TARGET_MYNA2) += myna2-rdk.dtb
 dtb-$(CONFIG_TARGET_MYNA2) += myna2-rdk-usb.dtb
 dtb-$(CONFIG_TARGET_PLATYPUS) += platypus-rdk.dtb
 dtb-$(CONFIG_TARGET_PLATYPUS) += platypus-rdk-usb.dtb
+dtb-$(CONFIG_TARGET_DOLPHIN) += dolphin-rdk.dtb
+dtb-$(CONFIG_TARGET_DOLPHIN) += dolphin-rdk-usb.dtb
 
 targets += $(dtb-y)
 
