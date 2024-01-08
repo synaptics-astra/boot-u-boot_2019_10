@@ -1,0 +1,11 @@
+menu "Synaptics drivers support"
+source "arch/arm/mach-synaptics/drivers/plat/Kconfig"
+source "arch/arm/mach-synaptics/drivers/mmc/Kconfig"
+source "arch/arm/mach-synaptics/drivers/net/Kconfig"
+source "arch/arm/mach-synaptics/drivers/usb/Kconfig"
+source "arch/arm/mach-synaptics/drivers/pinctrl/Kconfig"
+source "arch/arm/mach-synaptics/drivers/pmic/Kconfig"
+source "arch/arm/mach-synaptics/drivers/reset/Kconfig"
+source "arch/arm/mach-synaptics/drivers/spi/Kconfig"
+source "arch/arm/mach-synaptics/drivers/clk/Kconfig"
+endmenu

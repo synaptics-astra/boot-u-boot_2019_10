@@ -1,0 +1,2 @@
+config PHY_SUNPLUS
+	bool  "SUNPLUS Ethernet PHY support"

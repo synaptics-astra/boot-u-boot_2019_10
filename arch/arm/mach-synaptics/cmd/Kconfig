@@ -1,0 +1,14 @@
+menu "Synaptics specific command line interface"
+
+config CMD_SYNA_EMMCBOOT
+	bool "Enable boot Linux from eMMC"
+	depends on SYNA_SUBOOT
+
+config CMD_SYNA_FDT_UPDATE
+	bool "Enable FDT update before booting Kernel"
+	depends on SYNA_SUBOOT
+
+config CMD_SYNA_USBLOAD
+	bool "Enable loading image from USB slave"
+	depends on SYNA_USB_UBOOT
+endmenu
