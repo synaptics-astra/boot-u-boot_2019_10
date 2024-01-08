@@ -101,6 +101,9 @@ int android_image_get_kernel(const struct andr_img_hdr *hdr, int verify,
 		} else {
 			*os_data = (ulong)hdr;
 			*os_data += hdr->page_size;
+#ifdef CONFIG_ARCH_SYNAPTICS
+			*os_data += 0x80;
+#endif
 		}
 	}
 	if (os_len) {
@@ -142,6 +145,10 @@ ulong android_image_get_kcomp(const struct andr_img_hdr *hdr)
 {
 	const void *p = (void *)((uintptr_t)hdr + hdr->page_size);
 
+#ifdef CONFIG_ARCH_SYNAPTICS
+	p += 0x80;
+#endif
+
 	if (image_get_magic((image_header_t *)p) == IH_MAGIC)
 		return image_get_comp((image_header_t *)p);
 	else if (get_unaligned_le32(p) == LZ4F_MAGIC)
@@ -177,10 +184,14 @@ int android_image_get_second(const struct andr_img_hdr *hdr,
 		return -1;
 	}
 
+#ifdef CONFIG_ARCH_SYNAPTICS
+	*second_data = hdr->second_addr;
+#else
 	*second_data = (unsigned long)hdr;
 	*second_data += hdr->page_size;
 	*second_data += ALIGN(hdr->kernel_size, hdr->page_size);
 	*second_data += ALIGN(hdr->ramdisk_size, hdr->page_size);
+#endif
 
 	printf("second address is 0x%lx\n",*second_data);
 
