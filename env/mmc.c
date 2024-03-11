@@ -33,6 +33,10 @@ DECLARE_GLOBAL_DATA_PTR;
 #define CONFIG_ENV_OFFSET 0
 #endif
 
+#ifdef CONFIG_ARCH_SYNAPTICS
+	extern int get_mmc_boot_dev(void);
+#endif
+
 #if CONFIG_IS_ENABLED(OF_CONTROL)
 static inline int mmc_offset_try_partition(const char *str, s64 *val)
 {
@@ -40,9 +44,17 @@ static inline int mmc_offset_try_partition(const char *str, s64 *val)
 	struct blk_desc *desc;
 	int len, i, ret;
 
+#ifdef CONFIG_ARCH_SYNAPTICS
+	desc = blk_get_dev("mmc", get_mmc_boot_dev());
+	if (! desc || desc->type == DEV_TYPE_UNKNOWN) {
+		debug("** Bad device\n");
+		return -ENOENT;
+	}
+#else
 	ret = blk_get_device_by_str("mmc", STR(CONFIG_SYS_MMC_ENV_DEV), &desc);
 	if (ret < 0)
 		return (ret);
+#endif
 
 	for (i = 1;;i++) {
 		ret = part_get_info(desc, i, &info);
@@ -125,7 +137,11 @@ __weak int mmc_get_env_addr(struct mmc *mmc, int copy, u32 *env_addr)
 
 __weak int mmc_get_env_dev(void)
 {
+#ifdef CONFIG_ARCH_SYNAPTICS
+	return get_mmc_boot_dev();
+#else
 	return CONFIG_SYS_MMC_ENV_DEV;
+#endif
 }
 
 #ifdef CONFIG_SYS_MMC_ENV_PART
