@@ -58,6 +58,8 @@ struct i2c_regs {
 #define MIN_HS_SCL_HIGHTIME	60
 #define MIN_HS_SCL_LOWTIME	160
 
+#define DEFAULT_SDA_HOLD_TIME 300
+
 /* Worst case timeout for 1 byte is kept as 2ms */
 #define I2C_BYTE_TO		(CONFIG_SYS_HZ/500)
 #define I2C_STOPDET_TO		(CONFIG_SYS_HZ/500)

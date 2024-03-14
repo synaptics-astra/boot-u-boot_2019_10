@@ -154,6 +154,8 @@ static unsigned int __dw_i2c_set_bus_speed(struct i2c_regs *i2c_base,
 	/* Configure SDA Hold Time if required */
 	if (scl_sda_cfg)
 		writel(scl_sda_cfg->sda_hold, &i2c_base->ic_sda_hold);
+	else
+		writel((bus_mhz * DEFAULT_SDA_HOLD_TIME) / NANO_TO_MICRO, &i2c_base->ic_sda_hold);
 
 	/* Restore back i2c now speed set */
 	if (ena == IC_ENABLE_0B)
