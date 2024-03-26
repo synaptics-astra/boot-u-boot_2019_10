@@ -800,6 +800,8 @@ dtb-$(CONFIG_TARGET_VEXPRESS_CA15_TC2) += vexpress-v2p-ca15_a7.dtb
 
 dtb-$(CONFIG_TARGET_MYNA2) += myna2-rdk.dtb
 dtb-$(CONFIG_TARGET_MYNA2) += myna2-rdk-usb.dtb
+dtb-$(CONFIG_TARGET_PLATYPUS) += platypus-rdk.dtb
+dtb-$(CONFIG_TARGET_PLATYPUS) += platypus-rdk-usb.dtb
 
 targets += $(dtb-y)
 

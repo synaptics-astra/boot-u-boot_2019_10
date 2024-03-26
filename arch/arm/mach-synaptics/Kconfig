@@ -35,6 +35,7 @@ source "arch/arm/mach-synaptics/drivers/Kconfig"
 source "arch/arm/mach-synaptics/cmd/Kconfig"
 
 source "board/synaptics/myna2/Kconfig"
+source "board/synaptics/platypus/Kconfig"
 
 menu "Synaptics Specific Setup"
 
