@@ -53,7 +53,7 @@
 
 #define CONFIG_SYS_INIT_SP_ADDR		(CONFIG_SYS_TEXT_BASE - (2 << 20))
 
-#define CONFIG_SYS_BOOTM_LEN	(16 << 20)
+#define CONFIG_SYS_BOOTM_LEN	(32 << 20)
 
 /* Watchdog configs*/
 #define CONFIG_HW_WATCHDOG
