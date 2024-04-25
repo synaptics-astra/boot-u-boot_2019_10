@@ -1,0 +1,4 @@
+config SYNA_OPTEE
+	bool "Synaptics SoC TEE driver"
+	depends on OPTEE
+	default y

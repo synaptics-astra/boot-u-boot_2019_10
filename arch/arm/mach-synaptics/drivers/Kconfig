@@ -8,4 +8,5 @@ source "arch/arm/mach-synaptics/drivers/pmic/Kconfig"
 source "arch/arm/mach-synaptics/drivers/reset/Kconfig"
 source "arch/arm/mach-synaptics/drivers/spi/Kconfig"
 source "arch/arm/mach-synaptics/drivers/clk/Kconfig"
+source "arch/arm/mach-synaptics/drivers/tee/Kconfig"
 endmenu

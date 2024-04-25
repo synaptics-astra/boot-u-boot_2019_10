@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: GPL-2.0+
 #
-# Copyright (C) 2016~2023 Synaptics Incorporated. All rights reserved.
+# Copyright (C) 2016~2024 Synaptics Incorporated. All rights reserved.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License version 2 or
@@ -22,15 +22,4 @@
 # TO ANY PARTY SHALL NOT EXCEED ONE HUNDRED U.S. DOLLARS.
 #
 
-obj-y += plat/	\
-	ext4/		\
-	fastboot/	\
-	mmc/		\
-	net/		\
-	usb/		\
-	pinctrl/	\
-	pmic/		\
-	reset/		\
-	spi/		\
-	clk/		\
-	tee/
+obj-$(CONFIG_SYNA_OPTEE) += teec_ta_load_syna.o
