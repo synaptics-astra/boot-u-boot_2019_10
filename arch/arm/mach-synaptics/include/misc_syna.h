@@ -22,6 +22,11 @@
  * TO ANY PARTY SHALL NOT EXCEED ONE HUNDRED U.S. DOLLARS.
  */
 
+enum {
+	DEV_EMMC = 0,
+	DEV_SD,
+};
+
 int get_leakage(void);
 int get_mmc_boot_dev(void);
 int get_mmc_active_dev(void);

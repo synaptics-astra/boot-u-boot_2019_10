@@ -42,9 +42,9 @@ int get_mmc_boot_dev(void)
 	debug("\tboot_source: %d\n", boot_source);
 
 	if (boot_source == Gbl_bootStrap_bootSrc_ROM_SPI_BOOT)
-		mmc_flash_dev = 1; /* SPI-SD */
+		mmc_flash_dev = DEV_SD; /* SPI-SD */
 	else
-		mmc_flash_dev = 0; /* eMMC */
+		mmc_flash_dev = DEV_EMMC; /* eMMC */
 
 	return mmc_flash_dev;
 }
