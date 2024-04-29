@@ -107,6 +107,25 @@ static const char *find_str_in_list(const char *list, const char *str, int split
 	return NULL;
 }
 
+static int emmcburn_switch_part(int dev, int part) {
+	char cmd[256];
+	int ret = -1;
+
+	if (dev == DEV_SD)
+		return 0;
+
+	if (dev == DEV_EMMC) {
+		sprintf(cmd, "mmc dev %d %d", dev, part);
+		ret = run_command(cmd, 0);
+		if (ret)
+			return -1;
+
+		return 0;
+	}
+
+	return -1;
+}
+
 static int emmc_init(void)
 {
 	int ret = -1;
@@ -114,11 +133,6 @@ static int emmc_init(void)
 	if (curr_device >= 0)
 		return 0;
 
-	ret = run_command("mmc rescan", 0);
-	if (ret) {
-		printf("MMC device init fail\n");
-		return CMD_RET_FAILURE;
-	}
 	curr_device = get_mmc_active_dev();
 
 	mmc = find_mmc_device(curr_device);
@@ -176,9 +190,7 @@ static int emmc_erase(int part, unsigned int start_lba, unsigned int cnt)
 
 	if (part != curr_part) {
 		//switch part: 0, 1, 2
-		sprintf(cmd, "mmc dev %d %d", curr_device, part);
-		ret = run_command(cmd, 0);
-		if (ret)
+		if (emmcburn_switch_part(curr_device, part))
 			return -1;
 		curr_part = part;
 	}
@@ -200,9 +212,7 @@ static int emmc_read(int part, unsigned int start_lba, unsigned int cnt, void *b
 
 	if (part != curr_part) {
 		//switch part: 0, 1, 2
-		sprintf(cmd, "mmc dev %d %d", curr_device, part);
-		ret = run_command(cmd, 0);
-		if (ret)
+		if (emmcburn_switch_part(curr_device, part))
 			return -1;
 		curr_part = part;
 	}
@@ -232,9 +242,7 @@ static int emmc_write(int part, unsigned int start_lba, unsigned int cnt, void *
 
 	if (part != curr_part) {
 		//switch part: 0, 1, 2
-		sprintf(cmd, "mmc dev %d %d", curr_device, part);
-		ret = run_command(cmd, 0);
-		if (ret)
+		if (emmcburn_switch_part(curr_device, part))
 			return -1;
 		curr_part = part;
 	}
@@ -303,11 +311,11 @@ static int read_gpt_partition_info(void)
 	if (ret)
 		return -1;
 
-	sprintf(cmd, "mmc dev %d 0", curr_device);
-	ret = run_command(cmd, 0);
-	if (ret)
-		return -1;
-	curr_part = 0;
+	if (0 != curr_part) {
+		if (emmcburn_switch_part(curr_device, 0))
+			return -1;
+		curr_part = 0;
+	}
 
 	tmp = malloc_cache_aligned(GPT_LBA_NUM * get_blksize());
 	memset(tmp, 0, (GPT_LBA_NUM * get_blksize()));
