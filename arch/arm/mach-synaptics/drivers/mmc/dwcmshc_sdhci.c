@@ -244,9 +244,8 @@ static void dwcmshc_setup_phy_datapath(struct udevice *dev)
 	sdhci_writeb(host, valb, PHY_ATDL_CNFG_REG);
 }
 
-static void dwcmshc_setup_phy_delayline(struct udevice *dev, u8 delay)
+static void dwcmshc_setup_phy_delayline(struct sdhci_host *host, u8 delay)
 {
-	struct sdhci_host *host = dev_get_priv(dev);
 	u8 valb;
 
 	valb = sdhci_readb(host, PHY_SDCLKDL_CNFG_REG);
@@ -263,9 +262,8 @@ static void dwcmshc_setup_phy_delayline(struct udevice *dev, u8 delay)
 	sdhci_writeb(host, valb, PHY_SDCLKDL_CNFG_REG);
 }
 
-static void dwcmshc_setup_phy_tuning(struct udevice *dev)
+static void dwcmshc_setup_phy_tuning(struct sdhci_host *host)
 {
-	struct sdhci_host *host = dev_get_priv(dev);
 	u32 offset, val;
 
 	offset = sdhci_readl(host, SDHCI_P_VENDOR_SPECIFIC_AREA);
@@ -280,9 +278,9 @@ static void dwcmshc_setup_phy_tuning(struct udevice *dev)
 	sdhci_writel(host, val, offset);
 }
 
-static int dwcmshc_setup_phy_configure(struct udevice *dev)
+static int dwcmshc_setup_phy_configure(struct sdhci_host *host)
 {
-	struct sdhci_host *host = dev_get_priv(dev);
+	struct dwcmshc_sdhci_plat *plat = dev_get_platdata(host->mmc->dev);
 	struct phy_gen_setting *gen_setting = &gen_setting_1v8;
 	struct phy_pad_setting *pad_setting = pad_setting_1v8;
 
@@ -321,14 +319,15 @@ static int dwcmshc_setup_phy_configure(struct udevice *dev)
 	return ret;
 }
 
-static int dwcmshc_setup_phy(struct udevice *dev)
+static int dwcmshc_setup_phy(struct sdhci_host *host)
 {
-	struct dwcmshc_sdhci_plat *plat = dev_get_platdata(dev);
+	struct dwcmshc_sdhci_plat *plat = dev_get_platdata(host->mmc->dev);
 
-	dwcmshc_setup_phy_datapath(dev);
-	dwcmshc_setup_phy_delayline(dev, plat->sdclkdl_dc);
-	dwcmshc_setup_phy_tuning(dev);
-	dwcmshc_setup_phy_configure(dev);
+	dwcmshc_setup_phy_datapath(host);
+	dwcmshc_setup_phy_delayline(host, plat->sdclkdl_dc);
+	dwcmshc_setup_phy_tuning(host);
+	dwcmshc_setup_phy_configure(host);
+
 	return 0;
 }
 
@@ -380,7 +379,7 @@ static int dwcmshc_probe(struct udevice *dev)
 		return ret;
 
 	dwcmshc_reset_phy(host, 0);
-	dwcmshc_setup_phy(dev);
+	dwcmshc_setup_phy(host);
 	dwcmshc_reset_phy(host, 1);
 
 	return ret;
