@@ -42,6 +42,7 @@
 #define GPT_LBA_NUM				34
 #define MAX_GPT_PT_NUM			128
 #define GZIP_MAGIC_NUMBER		0x8B1F
+#define GUNZIP_BUFFER_SIZE		(4<<20)
 
 static int curr_device = -1;
 static struct mmc *mmc;
@@ -428,7 +429,7 @@ static int burn_images(struct pt_info pi, void *buff, unsigned int size)
 		printf("Image format: gzip\n");
 
 		ret = gzwrite(buff, size, mmc_get_blk_desc(mmc),
-			      get_erase_grp_size() * 1024, pi.start_lba * get_blksize(), 0);
+			      GUNZIP_BUFFER_SIZE, pi.start_lba * get_blksize(), 0);
 		if (ret)
 			return -1;
 		return 0;
