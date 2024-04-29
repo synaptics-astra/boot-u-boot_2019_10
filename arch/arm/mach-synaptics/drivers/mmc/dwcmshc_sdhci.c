@@ -144,6 +144,7 @@ struct dwcmshc_sdhci_plat {
 	struct mmc_config cfg;
 	struct mmc mmc;
 	struct reset_ctl_bulk reset_ctl;
+	u32 sdclkdl_dc;
 	int num_phy_setting;
 	struct phy_setting *phy_setting;
 };
@@ -245,7 +246,7 @@ static void dwcmshc_setup_phy_datapath(struct udevice *dev)
 	sdhci_writeb(host, valb, PHY_ATDL_CNFG_REG);
 }
 
-static void dwcmshc_setup_phy_delayline(struct udevice *dev)
+static void dwcmshc_setup_phy_delayline(struct udevice *dev, u8 delay)
 {
 	struct sdhci_host *host = dev_get_priv(dev);
 	u8 valb;
@@ -256,7 +257,7 @@ static void dwcmshc_setup_phy_delayline(struct udevice *dev)
 
 	valb = sdhci_readb(host, PHY_SDCLKDL_DC_REG);
 	valb &= ~CCKDL_DC_MSK;
-	valb |= (127 << CCKDL_DC_SFT);
+	valb |= delay << CCKDL_DC_SFT;
 	sdhci_writeb(host, valb, PHY_SDCLKDL_DC_REG);
 
 	valb = sdhci_readb(host, PHY_SDCLKDL_CNFG_REG);
@@ -324,8 +325,10 @@ static int dwcmshc_setup_phy_configure(struct udevice *dev)
 
 static int dwcmshc_setup_phy(struct udevice *dev)
 {
+	struct dwcmshc_sdhci_plat *plat = dev_get_platdata(dev);
+
 	dwcmshc_setup_phy_datapath(dev);
-	dwcmshc_setup_phy_delayline(dev);
+	dwcmshc_setup_phy_delayline(dev, plat->sdclkdl_dc);
 	dwcmshc_setup_phy_tuning(dev);
 	dwcmshc_setup_phy_configure(dev);
 	return 0;
@@ -364,6 +367,8 @@ static int dwcmshc_probe(struct udevice *dev)
 
 	if (dev_read_bool(dev, "3_3v-signalling"))
 		host->mmc->signal_voltage = MMC_SIGNAL_VOLTAGE_330;
+
+	plat->sdclkdl_dc = dev_read_u32_default(dev, "sdclkdl-dc", 127);
 
 	ret = sdhci_setup_cfg(&plat->cfg, host, plat->cfg.f_max, 0);
 	if (ret)
