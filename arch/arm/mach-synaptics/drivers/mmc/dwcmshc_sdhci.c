@@ -145,8 +145,6 @@ struct dwcmshc_sdhci_plat {
 	struct mmc mmc;
 	struct reset_ctl_bulk reset_ctl;
 	u32 sdclkdl_dc;
-	int num_phy_setting;
-	struct phy_setting *phy_setting;
 };
 
 struct phy_gen_setting gen_setting_1v8 = {PHY_CNFG_REG, PHY_GEN_MASK, PHY_GEN_SETTING(PAD_SP_8, PAD_SN_8)};
