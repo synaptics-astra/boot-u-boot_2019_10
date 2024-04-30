@@ -188,4 +188,7 @@ U_BOOT_DRIVER(fxl6408_driver) = {
 	.ops	= &fxl6408_gpio_ops,
 	.of_match = fxl6408_gpio_ids,
 	.probe	= fxl6408_gpio_probe,
+#ifdef CONFIG_ARCH_SYNAPTICS
+	.flags	= DM_FLAG_VITAL,
+#endif
 };
