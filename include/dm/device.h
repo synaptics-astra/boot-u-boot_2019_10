@@ -62,6 +62,13 @@ struct driver_info;
 #define DM_FLAG_OS_PREPARE		(1 << 10)
 
 /*
+ * Device is vital to the operation of other devices. It is possible to
+ * remove this device after all regular devices are removed. This is useful
+ * e.g. for clock, which need to be active during the device-removal phase.
+ */
+#define DM_FLAG_VITAL			(1 << 14)
+
+/*
  * One or multiple of these flags are passed to device_remove() so that
  * a selective device removal as specified by the remove-stage and the
  * driver flags can be done.
@@ -76,7 +83,8 @@ enum {
 	/* Remove devices which need some final OS preparation steps */
 	DM_REMOVE_OS_PREPARE = DM_FLAG_OS_PREPARE,
 
-	/* Add more use cases here */
+	/* Remove only devices that are not marked vital */
+	DM_REMOVE_NON_VITAL	= DM_FLAG_VITAL,
 
 	/* Remove devices with any active flag */
 	DM_REMOVE_ACTIVE_ALL = DM_REMOVE_ACTIVE_DMA | DM_REMOVE_OS_PREPARE,

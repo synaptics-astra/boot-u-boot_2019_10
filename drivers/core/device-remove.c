@@ -40,20 +40,24 @@ int device_chld_remove(struct udevice *dev, struct driver *drv,
 		       uint flags)
 {
 	struct udevice *pos, *n;
-	int ret;
+	int result = 0;
 
 	assert(dev);
 
 	list_for_each_entry_safe(pos, n, &dev->child_head, sibling_node) {
+		int ret;
+
 		if (drv && (pos->driver != drv))
 			continue;
 
 		ret = device_remove(pos, flags);
-		if (ret)
+		if (ret == -EPROBE_DEFER)
+			result = ret;
+		else if (ret && ret != -EKEYREJECTED)
 			return ret;
 	}
 
-	return 0;
+	return result;
 }
 
 int device_unbind(struct udevice *dev)
@@ -143,13 +147,43 @@ void device_free(struct udevice *dev)
 	devres_release_probe(dev);
 }
 
-static bool flags_remove(uint flags, uint drv_flags)
+/**
+ * flags_remove() - Figure out whether to remove a device
+ *
+ * If this is called with @flags == DM_REMOVE_NON_VITAL | DM_REMOVE_ACTIVE_DMA,
+ * then it returns 0 (=go head and remove) if the device is not matked vital
+ * but is marked DM_REMOVE_ACTIVE_DMA.
+ *
+ * If this is called with @flags == DM_REMOVE_ACTIVE_DMA,
+ * then it returns 0 (=go head and remove) if the device is marked
+ * DM_REMOVE_ACTIVE_DMA, regardless of whether it is marked vital.
+ *
+ * @flags: Flags passed to device_remove()
+ * @drv_flags: Driver flags
+ * Return: 0 if the device should be removed,
+ * -EKEYREJECTED if @flags includes a flag in DM_REMOVE_ACTIVE_ALL but
+ *	@drv_flags does not (indicates that this device has nothing to do for
+ *	DMA shutdown or OS prepare)
+ * -EPROBE_DEFER if @flags is DM_REMOVE_NON_VITAL but @drv_flags contains
+ *	DM_FLAG_VITAL (indicates the device is vital and should not be removed)
+ */
+static int flags_remove(uint flags, uint drv_flags)
 {
-	if ((flags & DM_REMOVE_NORMAL) ||
-	    (flags & (drv_flags & (DM_FLAG_ACTIVE_DMA | DM_FLAG_OS_PREPARE))))
-		return true;
+	if (!(flags & DM_REMOVE_NORMAL)) {
+		bool vital_match;
+		bool active_match;
 
-	return false;
+		active_match = !(flags & DM_REMOVE_ACTIVE_ALL) ||
+			(drv_flags & flags);
+		vital_match = !(flags & DM_REMOVE_NON_VITAL) ||
+			!(drv_flags & DM_FLAG_VITAL);
+		if (!vital_match)
+			return -EPROBE_DEFER;
+		if (!active_match)
+			return -EKEYREJECTED;
+	}
+
+	return 0;
 }
 
 int device_remove(struct udevice *dev, uint flags)
@@ -163,13 +197,6 @@ int device_remove(struct udevice *dev, uint flags)
 	if (!(dev->flags & DM_FLAG_ACTIVATED))
 		return 0;
 
-	drv = dev->driver;
-	assert(drv);
-
-	ret = uclass_pre_remove_device(dev);
-	if (ret)
-		return ret;
-
 	ret = device_chld_remove(dev, NULL, flags);
 	if (ret)
 		goto err;
@@ -178,7 +205,20 @@ int device_remove(struct udevice *dev, uint flags)
 	 * Remove the device if called with the "normal" remove flag set,
 	 * or if the remove flag matches any of the drivers remove flags
 	 */
-	if (drv->remove && flags_remove(flags, drv->flags)) {
+	drv = dev->driver;
+	assert(drv);
+	ret = flags_remove(flags, drv->flags);
+	if (ret) {
+		log_debug("%s: When removing: flags=%x, drv->flags=%x, err=%d\n",
+			  dev->name, flags, drv->flags, ret);
+		return ret;
+	}
+
+	ret = uclass_pre_remove_device(dev);
+	if (ret)
+		return ret;
+
+	if (drv->remove) {
 		ret = drv->remove(dev);
 		if (ret)
 			goto err_remove;
@@ -192,12 +232,9 @@ int device_remove(struct udevice *dev, uint flags)
 		}
 	}
 
-	if (flags_remove(flags, drv->flags)) {
-		device_free(dev);
-
-		dev->seq = -1;
-		dev->flags &= ~DM_FLAG_ACTIVATED;
-	}
+	device_free(dev);
+	dev->seq = -1;
+	dev->flags &= ~DM_FLAG_ACTIVATED;
 
 	return ret;
 
