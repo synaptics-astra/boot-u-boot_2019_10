@@ -51,10 +51,19 @@
 			regulator-max-microvolt = <3300000>;
 			regulator-name = "vmmc_sdio";
 			enable-active-high;
-			regulator-boot-on;
 			gpio = <&expander1 4 GPIO_ACTIVE_HIGH>;
 		};
 
+		sdio_vqmmc: sdio_vqmmc {
+			compatible = "regulator-gpio";
+			pinctrl-names = "default";
+			regulator-min-microvolt = <1800000>;
+			regulator-max-microvolt = <3300000>;
+			regulator-name = "vqmmc_sdio";
+			regulator-type = "voltage";
+			states = <1800000 0x0 3300000 0x1>;
+			gpios = <&expander1 6 GPIO_ACTIVE_HIGH>;
+		};
 	};
 };
 
@@ -129,6 +138,11 @@
 
 &sdhci0 {
 	status = "okay";
+	mmc-ddr-1_8v;
+	mmc-hs200-1_8v;
+	mmc-hs400-1_8v;
+	fixed-voltage;
+	sdclkdl-dc = <40>;
 };
 
 &sdhci1 {
@@ -140,8 +154,10 @@
 	sd-uhs-sdr25;
 	sd-uhs-sdr50;
 	sd-uhs-sdr104;
-	3_3v-signalling;
+	fixed-voltage;
+	sdclkdl-dc = <58>;
 	vmmc-supply = <&sdio_vmmc>;
+	vqmmc-supply = <&sdio_vqmmc>;
 };
 
 &spi0 {

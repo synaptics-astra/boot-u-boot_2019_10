@@ -47,11 +47,25 @@
 
 		sdio_vmmc: sdio_vmmc {
 			compatible = "regulator-fixed";
+			pinctrl-0 = <&sdio_vmmc_pmux>;
+			pinctrl-names = "default";
 			regulator-min-microvolt = <3300000>;
 			regulator-max-microvolt = <3300000>;
 			regulator-name = "vmmc_sdio";
 			enable-active-high;
 			gpio = <&portb 16 GPIO_ACTIVE_HIGH>;
+		};
+
+		sdio_vqmmc: sdio_vqmmc {
+			compatible = "regulator-gpio";
+			pinctrl-0 = <&sdio_vqmmc_pmux>;
+			pinctrl-names = "default";
+			regulator-min-microvolt = <1800000>;
+			regulator-max-microvolt = <3300000>;
+			regulator-name = "vqmmc_sdio";
+			regulator-type = "voltage";
+			states = <1800000 0x0 3300000 0x1>;
+			gpios = <&porta 17 GPIO_ACTIVE_HIGH>;
 		};
 	};
 };
@@ -64,6 +78,11 @@
 
 	sdio_vmmc_pmux: sdio_vmmc_pmux{
 		groups = "SDIO0_WP";
+		function = "gpio";
+	};
+
+	sdio_vqmmc_pmux: sdio_vqmmc_pmux{
+		groups = "I2S1_DO1";
 		function = "gpio";
 	};
 };
@@ -106,20 +125,24 @@
 
 &sdhci0 {
 	status = "okay";
-	max-frequency = <50000000>;
-	cap-mmc-highspeed;
-	1_8v-signalling;
+	mmc-ddr-1_8v;
+	mmc-hs200-1_8v;
+	mmc-hs400-1_8v;
+	fixed-voltage;
+	sdclkdl-dc = <26>;
 };
 
 &sdhci1 {
 	status="okay";
-	pinctrl-0 = <&sdio_pmux &sdio_vmmc_pmux>;
+	pinctrl-0 = <&sdio_pmux>;
 	pinctrl-names = "default";
 	cap-sd-highspeed;
 	sd-uhs-sdr12;
 	sd-uhs-sdr25;
 	sd-uhs-sdr50;
 	sd-uhs-sdr104;
-	3_3v-signalling;
+	fixed-voltage;
+	sdclkdl-dc = <58>;
 	vmmc-supply = <&sdio_vmmc>;
+	vqmmc-supply = <&sdio_vqmmc>;
 };
