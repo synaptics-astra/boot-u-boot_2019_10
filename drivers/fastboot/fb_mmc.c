@@ -16,6 +16,9 @@
 #include <div64.h>
 #include <linux/compat.h>
 #include <android_image.h>
+#ifdef CONFIG_ARCH_SYNAPTICS
+#include "misc_syna.h"
+#endif
 
 #define FASTBOOT_MAX_BLK_WRITE 16384
 
@@ -304,8 +307,13 @@ int fastboot_mmc_get_part_info(const char *part_name,
 			       disk_partition_t *part_info, char *response)
 {
 	int r;
+#ifdef CONFIG_ARCH_SYNAPTICS
+	int mmc_dev = get_mmc_active_dev();
 
+	*dev_desc = blk_get_dev("mmc", mmc_dev);
+#else
 	*dev_desc = blk_get_dev("mmc", CONFIG_FASTBOOT_FLASH_MMC_DEV);
+#endif
 	if (!*dev_desc) {
 		fastboot_fail("block device not found", response);
 		return -ENOENT;
@@ -337,8 +345,13 @@ void fastboot_mmc_flash_write(const char *cmd, void *download_buffer,
 {
 	struct blk_desc *dev_desc;
 	disk_partition_t info;
+#ifdef CONFIG_ARCH_SYNAPTICS
+	int mmc_dev = get_mmc_active_dev();
 
+	dev_desc = blk_get_dev("mmc", mmc_dev);
+#else
 	dev_desc = blk_get_dev("mmc", CONFIG_FASTBOOT_FLASH_MMC_DEV);
+#endif
 	if (!dev_desc || dev_desc->type == DEV_TYPE_UNKNOWN) {
 		pr_err("invalid mmc device\n");
 		fastboot_fail("invalid mmc device", response);
@@ -442,7 +455,12 @@ void fastboot_mmc_erase(const char *cmd, char *response)
 	struct blk_desc *dev_desc;
 	disk_partition_t info;
 	lbaint_t blks, blks_start, blks_size, grp_size;
+#ifdef CONFIG_ARCH_SYNAPTICS
+	int mmc_dev = get_mmc_active_dev();
+	struct mmc *mmc = find_mmc_device(mmc_dev);
+#else
 	struct mmc *mmc = find_mmc_device(CONFIG_FASTBOOT_FLASH_MMC_DEV);
+#endif
 
 	if (mmc == NULL) {
 		pr_err("invalid mmc device\n");
@@ -450,7 +468,12 @@ void fastboot_mmc_erase(const char *cmd, char *response)
 		return;
 	}
 
+#ifdef CONFIG_ARCH_SYNAPTICS
+	dev_desc = blk_get_dev("mmc", mmc_dev);
+#else
 	dev_desc = blk_get_dev("mmc", CONFIG_FASTBOOT_FLASH_MMC_DEV);
+#endif
+
 	if (!dev_desc || dev_desc->type == DEV_TYPE_UNKNOWN) {
 		pr_err("invalid mmc device\n");
 		fastboot_fail("invalid mmc device", response);

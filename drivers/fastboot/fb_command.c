@@ -321,12 +321,19 @@ static void reboot_bootloader(char *cmd_parameter, char *response)
 static void oem_format(char *cmd_parameter, char *response)
 {
 	char cmdbuf[32];
+#ifdef CONFIG_ARCH_SYNAPTICS
+	int mmc_dev = get_mmc_active_dev();
+#endif
 
 	if (!env_get("partitions")) {
 		fastboot_fail("partitions not set", response);
 	} else {
 		sprintf(cmdbuf, "gpt write mmc %x $partitions",
+#ifdef CONFIG_ARCH_SYNAPTICS
+			mmc_dev);
+#else
 			CONFIG_FASTBOOT_FLASH_MMC_DEV);
+#endif
 		if (run_command(cmdbuf, 0))
 			fastboot_fail("", response);
 		else
