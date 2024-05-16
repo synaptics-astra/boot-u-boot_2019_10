@@ -47,7 +47,7 @@
 static int curr_device = -1;
 static struct mmc *mmc;
 static int curr_part = -1;
-static int super_pt_erased;
+static int last_start_lba = -1;
 
 static int is_gpt_ready;
 static gpt_header g_gpt_h;
@@ -435,9 +435,21 @@ static int burn_images(struct pt_info pi, void *buff, unsigned int size)
 #if defined(CONFIG_CMD_UNZIP)
 	if (buff && (*((u16 *)buff) == GZIP_MAGIC_NUMBER)) {
 		printf("Image format: gzip\n");
-
 		ret = gzwrite(buff, size, mmc_get_blk_desc(mmc),
 			      GUNZIP_BUFFER_SIZE, pi.start_lba * get_blksize(), 0);
+		if (ret)
+			return -1;
+		return 0;
+	}
+#endif
+
+#if defined(CONFIG_IMAGE_SPARSE)
+	if (is_sparse_image(buff)) {
+		struct sparse_storage sparse;
+		printf("Image format: sparse\n");
+
+		setup_sparse_op(&sparse, &pi);
+		ret = write_sparse_image(&sparse, pi.partition_name, buff, NULL);
 		if (ret)
 			return -1;
 		return 0;
@@ -485,16 +497,14 @@ static int dl_and_burn_img(char *src, char *path, char *imgname, char *pt)
 	}
 	image_size = env_get_hex("filesize", 0);
 
-	//erase the whole partition
-	if (!(!strncmp(pi.partition_name, "super", 5) && super_pt_erased == 1)) {
-		if (!strncmp(pi.partition_name, "super", 5))
-			super_pt_erased = 1;
-
+	//erase the whole partition once, skip for sparse images
+	if (pi.start_lba != last_start_lba) {
 		ret = emmc_erase(pi.part, pi.start_lba, pi.cnt);
 		if (ret) {
 			free(buff);
 			return -1;
 		}
+		last_start_lba = pi.start_lba;
 	}
 
 	ret = burn_images(pi, buff, image_size);
@@ -1046,6 +1056,7 @@ static int do_img2sd(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 		pt_op_num = 1;
 	}
 
+	last_start_lba = -1;
 	for (i = 0; i < pt_op_num; i++) {
 		if (ignore_partition_list &&
 		    find_str_in_list(ignore_partition_list, ptop[i].pt_name, ',')) {
@@ -1190,7 +1201,6 @@ static int do_list2emmc(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[
 
 	printf("CMD_PART: list2emmc success.\n");
 
-	super_pt_erased = 0;
 	timer = get_timer(timer);
 	printf("%s: time cost %ld ms\n", __func__, timer);
 
@@ -1203,7 +1213,6 @@ static int do_list2emmc(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[
 	return 0;
 
 ERROR:
-	super_pt_erased = 0;
 	printf("CMD_PART: list2emmc failed\n");
 	printf("fail to write image\n");
 	return CMD_RET_USAGE;
