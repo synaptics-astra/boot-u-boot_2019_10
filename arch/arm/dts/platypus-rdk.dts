@@ -45,15 +45,6 @@
 		#address-cells = <1>;
 		#size-cells = <0>;
 
-		usb0_vbus: regulator@0 {
-			compatible = "regulator-fixed";
-			regulator-name = "usb0_vbus";
-			regulator-min-microvolt = <5000000>;
-			regulator-max-microvolt = <5000000>;
-			gpio = <&expander0 5 GPIO_ACTIVE_HIGH>;
-			enable-active-high;
-		};
-
 		sdio_vmmc: sdio_vmmc {
 			compatible = "regulator-fixed";
 			pinctrl-0 = <&sdio_vmmc_pmux>;
@@ -180,7 +171,6 @@
 };
 
 &usb0 {
-	vbus-supply = <&usb0_vbus>;
 	status = "okay";
 };
 
