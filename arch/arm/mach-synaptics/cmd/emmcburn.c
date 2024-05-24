@@ -1057,6 +1057,7 @@ static int do_img2sd(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 	}
 
 	last_start_lba = -1;
+	curr_device = -1;
 	for (i = 0; i < pt_op_num; i++) {
 		if (ignore_partition_list &&
 		    find_str_in_list(ignore_partition_list, ptop[i].pt_name, ',')) {
@@ -1093,7 +1094,7 @@ static int do_img2sd(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 
 	free(ptop);
 	timer = get_timer(timer);
-	printf("%s: time cost %ld ms\n", __func__, timer);
+	printf("%s: time cost %ld ms on mmc%d\n", __func__, timer, curr_device);
 	return 0;
 ERROR:
 	printf("CMD_PART: img2sd failed\n");
@@ -1112,6 +1113,7 @@ static int do_list2emmc(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[
 	char *ignore_partition_list = NULL;
 	const char *short_options = "i:";
 
+	curr_device = -1;
 	optind = 0;
 	while ((c = getopt(argc, argv, short_options)) != -1) {
 		switch (c) {
@@ -1202,7 +1204,7 @@ static int do_list2emmc(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[
 	printf("CMD_PART: list2emmc success.\n");
 
 	timer = get_timer(timer);
-	printf("%s: time cost %ld ms\n", __func__, timer);
+	printf("%s: time cost %ld ms on mmc%d\n", __func__, timer, curr_device);
 
 	//re-enable blk cache operation
 	ret = run_command("blkcache configure 8 32", 0);
